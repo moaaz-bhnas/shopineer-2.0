@@ -233,7 +233,7 @@ export default class FawryProviderService extends AbstractPaymentProvider<Option
         }`
       );
 
-      return { data: { checkoutUrl: response.data } };
+      return { data: { checkoutUrl: response.data, sessionId: context.session_id } };
     } catch (error) {
       this.logger_.failure(
         activityId,
@@ -254,6 +254,8 @@ export default class FawryProviderService extends AbstractPaymentProvider<Option
     paymentSessionData: Record<string, unknown>,
     context: Record<string, unknown>
   ): Promise<PaymentProviderError | { status: PaymentSessionStatus; data: PaymentProviderSessionResponse["data"] }> {
+    this.logger_.info(`⚡🔵 Fawry (authorizePayment): Authorizing payment for payment: ${paymentSessionData}`);
+
     return {
       data: paymentSessionData,
       status: "captured",
@@ -322,14 +324,29 @@ export default class FawryProviderService extends AbstractPaymentProvider<Option
     refundAmount: number
   ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
     const activityId = this.logger_.activity(
-      `⚡🔵 Fawry (refundPayment): Initiating a refund for payment: ${paymentData.checkoutUrl}`
+      `⚡🔵 Fawry (refundPayment): Initiating a refund for payment: ${paymentData}`
     );
-    console.log("🤯", paymentData, refundAmount);
 
     try {
+      const getPaymentSingature = crypto
+        .createHash("sha256")
+        .update(`${this.options_.merchantCode}${paymentData.sessionId}${this.options_.securityCode}`)
+        .digest("hex");
+
+      const getPaymentResponse = await axios.get(
+        `${this.options_.baseUrl}/ECommerceWeb/Fawry/payments/status/v2?merchantCode=${this.options_.merchantCode}&merchantRefNum=${paymentData.sessionId}&signature=${getPaymentSingature}`
+      );
+
+      this.logger_.success(
+        activityId,
+        `⚡🟢 Fawry (refundPayment): Successfully fetched payment details for session ID: ${
+          paymentData.sessionId
+        }. ${JSON.stringify(getPaymentResponse.data)}`
+      );
+
       const response = await axios.post(
         `${this.options_.baseUrl}/ECommerceWeb/Fawry/payments/refund`,
-        this.generateRefundObject("", refundAmount),
+        this.generateRefundObject(getPaymentResponse.data.fawryRefNumber, refundAmount),
         { headers: { "Content-Type": "application/json" } }
       );
 
