@@ -8,6 +8,17 @@ const GetSuppliersSchema = createFindParams();
 export default defineMiddlewares({
   routes: [
     {
+      matcher: "/admin/*",
+      method: "GET",
+      middlewares: [
+        (req, res, next) => {
+          console.log("🫡🫡");
+
+          next();
+        },
+      ],
+    },
+    {
       matcher: "/admin/suppliers",
       method: "POST",
       middlewares: [validateAndTransformBody(PostAdminCreateSupplier as any)],
