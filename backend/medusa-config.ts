@@ -51,6 +51,9 @@ const medusaConfig = {
   },
   modules: [
     {
+      resolve: "./src/modules/facebook-ads",
+    },
+    {
       resolve: "./src/modules/brand",
     },
     {

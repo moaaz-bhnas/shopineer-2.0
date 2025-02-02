@@ -33,14 +33,14 @@ const permissions = async (req: MedusaRequest, res: MedusaResponse, next: Medusa
 
   const isSuperAdmin = user?.metadata?.is_super_admin;
 
-  console.log("1️⃣", { user, isSuperAdmin });
+  console.log("1️⃣", { user, isSuperAdmin, actorId: req.session?.auth_context?.actor_id });
 
   if (isSuperAdmin) {
     next();
     return;
   }
 
-  const rolePermissions = user.role.permissions as unknown as Permission[];
+  const rolePermissions = (user?.role?.permissions || []) as unknown as Permission[];
   const isAllowed = rolePermissions.some(matchPathAndMethod(req));
 
   console.log("2️⃣", { 'req.baseUrl.replace(//admin/, "")': req.baseUrl.replace(/\/admin/, ""), isAllowed });
