@@ -20,7 +20,7 @@ export default class FacebookAdsModuleService {
     this.logger_ = logger;
     this.options_ = options;
 
-    // this.client = adsSdk.FacebookAdsApi.init(options.accessToken);
+    this.client = adsSdk.FacebookAdsApi.init(options.accessToken);
   }
 
   static validateOptions(options: Record<any, any>) {
