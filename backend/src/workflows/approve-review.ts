@@ -9,7 +9,7 @@ export const approveReviewStep = createStep(
   "approve-review-step",
   async function step(input: ApproveReviewDto, { container }) {
     const logger = container.resolve("logger");
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
     const ReviewModuleService: ReviewModuleService = container.resolve(REVIEW_MODULE);
 
     const activityId = logger.activity(`🔵 approveReviewStep: Approving review`);
@@ -37,7 +37,7 @@ export const approveReviewStep = createStep(
   },
   async function rollBack(input: ApproveReviewDto, { container }) {
     const ReviewModuleService: ReviewModuleService = container.resolve(REVIEW_MODULE);
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
 
     await ReviewModuleService.deleteReviews(input.review_id);
     await link.dismiss([

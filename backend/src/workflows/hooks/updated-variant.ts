@@ -11,7 +11,7 @@ updateProductVariantsWorkflow.hooks.productVariantsUpdated(async function addPri
   { container }
 ) {
   const logger = container.resolve("logger");
-  const link = container.resolve("remoteLink");
+  const link = container.resolve("link");
   const regionModuleService = container.resolve(Modules.REGION);
   const priceHistoryModuleService: PriceHistoryModuleService = container.resolve(PRICE_HISTORY_MODULE);
 
@@ -58,7 +58,7 @@ updateProductVariantsWorkflow.hooks.productVariantsUpdated(async function addPri
       prices.map((price) => {
         return {
           currency_code: price.currency_code,
-          amount: price.calculated_amount,
+          amount: Number(price.calculated_amount),
           raw_amount: price.raw_calculated_amount,
         };
       })

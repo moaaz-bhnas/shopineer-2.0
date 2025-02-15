@@ -23,7 +23,7 @@ export const assignRoleStep = createStep(
   "assign-role-step",
   async function assignRoleStep(input: AssignRoleDto, { container }) {
     const logger = container.resolve("logger");
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
     const query = container.resolve("query");
 
     const activityId = logger.activity(`🔵 assignRoleStep: Assigning role: ${input.roleId} to user: ${input.userId}`);
@@ -54,7 +54,7 @@ export const assignRoleStep = createStep(
     return new StepResponse(linkDefinition, linkDefinition);
   },
   async function rollBack(linkDefinition: LinkDefinition, { container }) {
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
     await link.dismiss(linkDefinition);
   }
 );
