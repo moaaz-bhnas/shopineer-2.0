@@ -1,20 +1,33 @@
-import {
-  PaymentProviderError,
-  PaymentProviderSessionResponse,
-  PaymentSessionStatus,
-  CreatePaymentProviderSession,
-  UpdatePaymentProviderSession,
-  ProviderWebhookPayload,
-  WebhookActionResult,
-  Logger,
-  CartDTO,
-  CartLineItemDTO,
-} from "@medusajs/types";
-import { AbstractPaymentProvider, BigNumber, MedusaError } from "@medusajs/utils";
 import fp from "lodash/fp";
 import crypto from "crypto";
 import axios from "axios";
 import { BACKEND_URL } from "../../lib/constants";
+import {
+  AuthorizePaymentInput,
+  AuthorizePaymentOutput,
+  CancelPaymentInput,
+  CancelPaymentOutput,
+  CapturePaymentInput,
+  CapturePaymentOutput,
+  CartDTO,
+  CartLineItemDTO,
+  DeletePaymentInput,
+  DeletePaymentOutput,
+  GetPaymentStatusInput,
+  GetPaymentStatusOutput,
+  InitiatePaymentInput,
+  InitiatePaymentOutput,
+  Logger,
+  ProviderWebhookPayload,
+  RefundPaymentInput,
+  RefundPaymentOutput,
+  RetrievePaymentInput,
+  RetrievePaymentOutput,
+  UpdatePaymentInput,
+  UpdatePaymentOutput,
+  WebhookActionResult,
+} from "@medusajs/framework/types";
+import { AbstractPaymentProvider, BigNumber, MedusaError, PaymentSessionStatus } from "@medusajs/framework/utils";
 
 type ChargeItem = {
   itemId: string;
@@ -206,18 +219,13 @@ export default class FawryProviderService extends AbstractPaymentProvider<Option
     return signature;
   }
 
-  async initiatePayment({
-    context,
-    amount,
-  }: CreatePaymentProviderSession): Promise<PaymentProviderError | PaymentProviderSessionResponse> {
+  async initiatePayment(input: InitiatePaymentInput): Promise<InitiatePaymentOutput> {
+    const { amount, data } = input;
+
     const activityId = this.logger_.activity(
-      `⚡🔵 Fawry (initiatePayment): Initiating a payment for cart: ${(context.extra.cart as CartDTO).id}`
+      `⚡🔵 Fawry (initiatePayment): Initiating a payment for cart: ${(data.cart as CartDTO).id}`
     );
-    const checkoutRequest = this.buildCheckoutRequest(
-      context.session_id,
-      context.extra.cart as CartDTO,
-      Number(amount)
-    );
+    const checkoutRequest = this.buildCheckoutRequest(data.session_id as string, data.cart as CartDTO, Number(amount));
 
     try {
       const response = await axios.post(`${this.options_.baseUrl}/fawrypay-api/api/payments/init`, checkoutRequest, {
@@ -229,151 +237,156 @@ export default class FawryProviderService extends AbstractPaymentProvider<Option
       this.logger_.success(
         activityId,
         `⚡🟢 Fawry (initiatePayment): Successfully created checkout URL: ${response.data} for cart: ${
-          (context.extra.cart as CartDTO).id
+          (data.cart as CartDTO).id
         }`
       );
 
-      return { data: { checkoutUrl: response.data } };
+      return { id: (data.cart as CartDTO).id.toString(), data: { checkoutUrl: response.data } };
     } catch (error) {
       this.logger_.failure(
         activityId,
         `⚡🔴 Fawry (initiatePayment): Failed to create checkout URL for cart: ${
-          (context.extra.cart as CartDTO).id
+          (data.cart as CartDTO).id
         } with error: ${error.message}`
       );
 
-      return {
-        error: error.message,
-        code: "unknown",
-        detail: error,
-      };
+      throw new Error(error.message);
     }
   }
 
-  async authorizePayment(
-    paymentSessionData: Record<string, unknown>,
-    context: Record<string, unknown>
-  ): Promise<PaymentProviderError | { status: PaymentSessionStatus; data: PaymentProviderSessionResponse["data"] }> {
-    return {
-      data: paymentSessionData,
-      status: "captured",
-    };
+  // async authorizePayment(input: AuthorizePaymentInput): Promise<AuthorizePaymentOutput> {
+  //   console.log("🤓🤓 authorizePayment", input);
+
+  //   return {
+  //     data: input.data,
+  //     status: PaymentSessionStatus.CAPTURED,
+  //   };
+  // }
+
+  capturePayment(input: CapturePaymentInput): Promise<CapturePaymentOutput> {
+    throw new Error("Method not implemented.");
   }
-
-  async capturePayment(
-    paymentData: Record<string, unknown>
-  ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
-    const externalId = paymentData.id;
-
-    try {
-      return {
-        id: externalId,
-      };
-    } catch (e) {
-      return {
-        error: e,
-        code: "unknown",
-        detail: e,
-      };
-    }
+  authorizePayment(input: AuthorizePaymentInput): Promise<AuthorizePaymentOutput> {
+    throw new Error("Method not implemented.");
   }
-
-  async getWebhookActionAndData(payload: ProviderWebhookPayload["payload"]): Promise<WebhookActionResult> {
-    const activityId = this.logger_.activity(
-      `⚡🔵 Fawry (webhook): triggered with payload: ${JSON.stringify(payload)}`
-    );
-
-    const data = payload.data as unknown as WebhookPayload;
-
-    switch (data.orderStatus) {
-      case "NEW":
-        return {
-          action: "authorized",
-          data: {
-            session_id: data.merchantRefNumber,
-            amount: new BigNumber(data.paymentAmount as number),
-          },
-        };
-      case "PAID":
-        return {
-          action: "captured",
-          data: {
-            session_id: data.merchantRefNumber,
-            amount: new BigNumber(data.paymentAmount as number),
-          },
-        };
-      case "FAILD":
-      case "EXPIRED":
-        return {
-          action: "failed",
-          data: {
-            session_id: data.merchantRefNumber,
-            amount: new BigNumber(data.paymentAmount as number),
-          },
-        };
-      default:
-        return {
-          action: "not_supported",
-        };
-    }
+  cancelPayment(input: CancelPaymentInput): Promise<CancelPaymentOutput> {
+    throw new Error("Method not implemented.");
   }
-
-  async refundPayment(
-    paymentData: Record<string, unknown>,
-    refundAmount: number
-  ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
-    const activityId = this.logger_.activity(
-      `⚡🔵 Fawry (refundPayment): Initiating a refund for payment: ${paymentData.checkoutUrl}`
-    );
-    console.log("🤯", paymentData, refundAmount);
-
-    try {
-      const response = await axios.post(
-        `${this.options_.baseUrl}/ECommerceWeb/Fawry/payments/refund`,
-        this.generateRefundObject("", refundAmount),
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      this.logger_.success(
-        activityId,
-        `⚡🟢 Fawry (refundPayment): Successfully created a refund for payment ${paymentData.checkoutUrl} with amount: ${refundAmount}`
-      );
-
-      return { data: { ...response.data } };
-    } catch (error) {
-      this.logger_.failure(
-        activityId,
-        `⚡🔴 Fawry (refundPayment): Failed to refund payment: ${paymentData.checkoutUrl} with error: ${error.message}`
-      );
-
-      return {
-        error: error.message,
-        code: "unknown",
-        detail: error,
-      };
-    }
+  deletePayment(input: DeletePaymentInput): Promise<DeletePaymentOutput> {
+    throw new Error("Method not implemented.");
   }
-
-  cancelPayment(
-    paymentData: Record<string, unknown>
-  ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
+  getPaymentStatus(input: GetPaymentStatusInput): Promise<GetPaymentStatusOutput> {
+    throw new Error("Method not implemented.");
+  }
+  refundPayment(input: RefundPaymentInput): Promise<RefundPaymentOutput> {
+    throw new Error("Method not implemented.");
+  }
+  retrievePayment(input: RetrievePaymentInput): Promise<RetrievePaymentOutput> {
+    throw new Error("Method not implemented.");
+  }
+  updatePayment(input: UpdatePaymentInput): Promise<UpdatePaymentOutput> {
+    throw new Error("Method not implemented.");
+  }
+  getWebhookActionAndData(data: ProviderWebhookPayload["payload"]): Promise<WebhookActionResult> {
     throw new Error("Method not implemented.");
   }
 
-  deletePayment(
-    paymentSessionData: Record<string, unknown>
-  ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
-    throw new Error("Method not implemented.");
-  }
-  getPaymentStatus(paymentSessionData: Record<string, unknown>): Promise<PaymentSessionStatus> {
-    throw new Error("Method not implemented.");
-  }
-  retrievePayment(
-    paymentSessionData: Record<string, unknown>
-  ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
-    throw new Error("Method not implemented.");
-  }
-  updatePayment(context: UpdatePaymentProviderSession): Promise<PaymentProviderError | PaymentProviderSessionResponse> {
-    throw new Error("Method not implemented.");
-  }
+  // async getWebhookActionAndData(payload: ProviderWebhookPayload["payload"]): Promise<WebhookActionResult> {
+  //   const activityId = this.logger_.activity(
+  //     `⚡🔵 Fawry (webhook): triggered with payload: ${JSON.stringify(payload)}`
+  //   );
+
+  //   const data = payload.data as unknown as WebhookPayload;
+
+  //   switch (data.orderStatus) {
+  //     case "NEW":
+  //       return {
+  //         action: "authorized",
+  //         data: {
+  //           session_id: data.merchantRefNumber,
+  //           amount: new BigNumber(data.paymentAmount as number),
+  //         },
+  //       };
+  //     case "PAID":
+  //       return {
+  //         action: "captured",
+  //         data: {
+  //           session_id: data.merchantRefNumber,
+  //           amount: new BigNumber(data.paymentAmount as number),
+  //         },
+  //       };
+  //     case "FAILD":
+  //     case "EXPIRED":
+  //       return {
+  //         action: "failed",
+  //         data: {
+  //           session_id: data.merchantRefNumber,
+  //           amount: new BigNumber(data.paymentAmount as number),
+  //         },
+  //       };
+  //     default:
+  //       return {
+  //         action: "not_supported",
+  //       };
+  //   }
+  // }
+
+  // async refundPayment(
+  //   paymentData: Record<string, unknown>,
+  //   refundAmount: number
+  // ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
+  //   const activityId = this.logger_.activity(
+  //     `⚡🔵 Fawry (refundPayment): Initiating a refund for payment: ${paymentData.checkoutUrl}`
+  //   );
+  //   console.log("🤯", paymentData, refundAmount);
+
+  //   try {
+  //     const response = await axios.post(
+  //       `${this.options_.baseUrl}/ECommerceWeb/Fawry/payments/refund`,
+  //       this.generateRefundObject("", refundAmount),
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+
+  //     this.logger_.success(
+  //       activityId,
+  //       `⚡🟢 Fawry (refundPayment): Successfully created a refund for payment ${paymentData.checkoutUrl} with amount: ${refundAmount}`
+  //     );
+
+  //     return { data: { ...response.data } };
+  //   } catch (error) {
+  //     this.logger_.failure(
+  //       activityId,
+  //       `⚡🔴 Fawry (refundPayment): Failed to refund payment: ${paymentData.checkoutUrl} with error: ${error.message}`
+  //     );
+
+  //     return {
+  //       error: error.message,
+  //       code: "unknown",
+  //       detail: error,
+  //     };
+  //   }
+  // }
+
+  // cancelPayment(
+  //   paymentData: Record<string, unknown>
+  // ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
+  //   throw new Error("Method not implemented.");
+  // }
+
+  // deletePayment(
+  //   paymentSessionData: Record<string, unknown>
+  // ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
+  //   throw new Error("Method not implemented.");
+  // }
+  // getPaymentStatus(paymentSessionData: Record<string, unknown>): Promise<PaymentSessionStatus> {
+  //   throw new Error("Method not implemented.");
+  // }
+  // retrievePayment(
+  //   paymentSessionData: Record<string, unknown>
+  // ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
+  //   throw new Error("Method not implemented.");
+  // }
+  // updatePayment(context: UpdatePaymentProviderSession): Promise<PaymentProviderError | PaymentProviderSessionResponse> {
+  //   throw new Error("Method not implemented.");
+  // }
 }
