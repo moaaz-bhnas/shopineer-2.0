@@ -1,5 +1,5 @@
 import { updateProductsWorkflow } from "@medusajs/core-flows";
-import { RemoteLink } from "@medusajs/framework/modules-sdk";
+import { Link } from "@medusajs/framework/modules-sdk";
 import { LinkDefinition, Logger, ProductDTO, RemoteQueryFunction } from "@medusajs/framework/types";
 import { Modules } from "@medusajs/framework/utils";
 import { StepResponse, WorkflowData } from "@medusajs/framework/workflows-sdk";
@@ -19,7 +19,7 @@ async function handleEntityLinking({
   logger: Logger;
   products: WorkflowData<ProductDTO[]>;
   additional_data: Record<string, any>;
-  link: RemoteLink;
+  link: Link;
   query: Omit<RemoteQueryFunction, symbol>;
   entityKey: string; // e.g., 'supplier' or 'brand'
   module: string; // e.g., SUPPLIER_MODULE or BRAND_MODULE
@@ -87,7 +87,7 @@ updateProductsWorkflow.hooks.productsUpdated(
   async function ({ products, additional_data }, { container }) {
     const logger = container.resolve("logger");
     const query = container.resolve("query");
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
 
     const supplierLinks = await handleEntityLinking({
       logger,
@@ -112,7 +112,7 @@ updateProductsWorkflow.hooks.productsUpdated(
   },
   async function rollBack(links, { container }) {
     // if (eq(links.length, 0)) return;
-    // const link = container.resolve("remoteLink");
+    // const link = container.resolve("link");
     // await link.dismiss(links);
   }
 );

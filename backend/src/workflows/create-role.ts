@@ -34,14 +34,14 @@ export const createRoleStep = createStep(
   async function createRoleStep(input: RoleDto, { container }) {
     const logger = container.resolve("logger");
     const roleModuleService: RoleModuleService = container.resolve(ROLE_MODULE);
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
 
     const permissions = uniqPermissions([...REQUIRED_PERMISSIONS, ...(input.permissions || [])]);
 
     const activityId = logger.activity(`🔵 createRoleStep: Creating role: ${input.name}`);
 
     // 1. Create the role
-    const role = await roleModuleService.createRoles({ ...input, permissions });
+    const role = await roleModuleService.createRoles({ ...input, permissions: permissions as any });
     logger.success(activityId, `🔵 createRoleStep: Role created: ${input.name}`);
 
     // 2. Link the role to the store

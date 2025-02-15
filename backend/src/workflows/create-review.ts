@@ -10,7 +10,7 @@ export const createReviewStep = createStep(
   "create-review-step",
   async function createReviewStep(input: ReviewDto, { container }) {
     const logger = container.resolve("logger");
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
     const ReviewModuleService: ReviewModuleService = container.resolve(REVIEW_MODULE);
 
     const activityId = logger.activity(`🔵 createReviewStep: Creating review`);
@@ -48,7 +48,7 @@ export const createReviewStep = createStep(
 
   async function rollBack(input: ReviewDto & { id: string }, { container }) {
     const ReviewModuleService: ReviewModuleService = container.resolve(REVIEW_MODULE);
-    const link = container.resolve("remoteLink");
+    const link = container.resolve("link");
 
     await ReviewModuleService.deleteReviews(input.id);
     await link.dismiss([
