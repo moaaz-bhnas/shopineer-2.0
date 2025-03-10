@@ -379,35 +379,35 @@ export default class FawryProviderService extends AbstractPaymentProvider<Option
     const activityId = this.logger_.activity(
       `⚡🔵 Fawry (refundPayment): Initiating a refund for payment: ${input.data.id}`
     );
-    return { data: {} };
-    // console.log("🤯", input);
-    // try {
-    //   // 1. get payment by merchant reference number (session_id)
-    //   const paymentData = await this.retrievePayment({ data: { id: input.data.id } });
-    //   console.log("🫣🫣🫣🫣", paymentData);
-    //   throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "");
-    //   // const response = await axios.post(
-    //   //   `${this.options_.baseUrl}/ECommerceWeb/Fawry/payments/refund`,
-    //   //   this.generateRefundObject("", Number(input.amount)),
-    //   //   { headers: { "Content-Type": "application/json" } }
-    //   // );
-    //   // this.logger_.success(
-    //   //   activityId,
-    //   //   `⚡🟢 Fawry (refundPayment): Successfully created a refund for payment ${paymentData.checkoutUrl} with amount: ${refundAmount}`
-    //   // );
-    //   // return { data: { ...response.data } };
-    // } catch (error) {
-    //   throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "");
-    //   // this.logger_.failure(
-    //   //   activityId,
-    //   //   `⚡🔴 Fawry (refundPayment): Failed to refund payment: ${paymentData.checkoutUrl} with error: ${error.message}`
-    //   // );
-    //   // return {
-    //   //   error: error.message,
-    //   //   code: "unknown",
-    //   //   detail: error,
-    //   // };
-    // }
+    // return { data: {} };
+    console.log("🤯", input);
+    try {
+      // 1. get payment by merchant reference number (session_id)
+      const paymentData = await this.retrievePayment({ data: { id: input.data.id } });
+      console.log("🫣🫣🫣🫣", paymentData);
+      throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "");
+      // const response = await axios.post(
+      //   `${this.options_.baseUrl}/ECommerceWeb/Fawry/payments/refund`,
+      //   this.generateRefundObject("", Number(input.amount)),
+      //   { headers: { "Content-Type": "application/json" } }
+      // );
+      // this.logger_.success(
+      //   activityId,
+      //   `⚡🟢 Fawry (refundPayment): Successfully created a refund for payment ${paymentData.checkoutUrl} with amount: ${refundAmount}`
+      // );
+      // return { data: { ...response.data } };
+    } catch (error) {
+      throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "");
+      // this.logger_.failure(
+      //   activityId,
+      //   `⚡🔴 Fawry (refundPayment): Failed to refund payment: ${paymentData.checkoutUrl} with error: ${error.message}`
+      // );
+      // return {
+      //   error: error.message,
+      //   code: "unknown",
+      //   detail: error,
+      // };
+    }
   }
 
   // async cancelPayment(
