@@ -30,7 +30,10 @@ export default async function ProductPreview({
   // })
 
   return (
-    <LocalizedClientLink href={`/products-tgn/${product.id}`} className="group">
+    <LocalizedClientLink
+      href={`/products-tgn/${product.slug}`}
+      className="group"
+    >
       <div data-testid="product-wrapper">
         <Thumbnail
           thumbnail={`${IMAGE_BASE_URL}/${product.thumbnail.path}`}

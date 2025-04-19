@@ -10,7 +10,7 @@ import { IMAGE_BASE_URL } from "@lib/constants"
 import ProductTemplate from "modules-tgn/products/templates"
 
 type Props = {
-  params: { countryCode: string; /*handle: string*/ id: string }
+  params: { countryCode: string; handle: string }
 }
 
 export async function generateStaticParams() {
@@ -29,7 +29,7 @@ export async function generateStaticParams() {
   const products = await Promise.all(
     Object.values(Locale).map((locale) => {
       return getProductsList({
-        queryParams: { locale, select: "id,title,slug" },
+        queryParams: { locale: "en" /*select: "id,title,slug" */ },
       })
     })
   ).then((responses) =>
@@ -40,7 +40,7 @@ export async function generateStaticParams() {
     ?.map((countryCode) =>
       products.map((product) => ({
         countryCode,
-        id: product.id,
+        handle: String(product.slug),
       }))
     )
     .flat()
@@ -50,14 +50,14 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   //   const { handle } = params
-  const { id } = params
+  const { handle } = params
   //   const region = await getRegion(params.countryCode)
 
   // if (!region) {
   //     notFound()
   // }
 
-  const product = await getProductById(id)
+  const product = (await getProductById(handle)).product
 
   if (!product) {
     notFound()
@@ -77,6 +77,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
+  const productData = await getProductById(params.handle)
+
+  if (!productData.product) {
+    notFound()
+  }
+
   //   const region = await getRegion(params.countryCode)
 
   //   if (!region) {
@@ -90,8 +96,9 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <ProductTemplate
-      product={product}
-      locale={params.countryCode}
+      product={productData.product}
+      images={productData.images}
+      locale={params.countryCode as Locale}
       //   region={region}
       //   countryCode={params.countryCode}
     />

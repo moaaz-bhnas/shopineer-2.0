@@ -31,6 +31,19 @@ interface Category {
   translations: CategoryTranslation[]
 }
 
+export interface Image {
+  id: number
+  title: string
+  path: string
+  size: string
+  type: string
+  extension: string
+  user_id: number
+  external_link: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Product {
   id: number
   images: string[]
@@ -54,20 +67,18 @@ export interface Product {
   title: string
   description: string
   product_attributes: any
-  thumbnail: {
-    id: number
-    title: string
-    path: string
-    size: string
-    type: string
-    extension: string
-    user_id: number
-    external_link: string
-    created_at: string
-    updated_at: string
-  }
+  thumbnail: Image
   category: Category
+  variants: any[]
   translations: ProductTranslation[]
+}
+
+interface ProductDetailResponse {
+  product: Product
+  images: Image[]
+  attributes: any[]
+  combinations: any[]
+  message: string
 }
 
 interface PaginationMeta {
@@ -86,22 +97,17 @@ interface ProductsResponse {
 interface ProductResponse {
   success: boolean
   status_code: number
-  data: Product
+  data: ProductDetailResponse
+  message: string
 }
 
-export async function getProductById(id: string): Promise<Product> {
+export async function getProductById(
+  id: string
+): Promise<ProductResponse["data"]> {
   const response = await fetch(`${API_BASE_URL}/products/${id}`)
   const data: ProductResponse = await response.json()
   return data.data
 }
-
-// export async function getProductByHandle(
-//   handle: string
-// ): Promise<Product | null> {
-//   const response = await fetch(`${API_BASE_URL}/products/${handle}`)
-//   const data: ProductResponse = await response.json()
-//   return data.data
-// }
 
 export async function getProductsList({
   pageParam = 1,
@@ -134,6 +140,7 @@ export async function getProductsList({
   }).toString()
 
   const response = await fetch(`${API_BASE_URL}/products?${queryString}`)
+
   const data: ProductsResponse = await response.json()
 
   const nextPage =
