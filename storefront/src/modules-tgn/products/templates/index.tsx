@@ -1,7 +1,6 @@
 import React, { Suspense } from "react"
 
 import ImageGallery from "@modules/products/components/image-gallery"
-import ProductActions from "@modules/products/components/product-actions"
 import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import RelatedProducts from "@modules/products/components/related-products"
 import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
@@ -12,6 +11,7 @@ import { Locale } from "@lib/data-tgn/locales"
 import ProductInfo from "./product-info"
 import ProductTabs from "../components/product-tabs"
 import { IMAGE_BASE_URL } from "@lib/constants"
+import ProductActions from "../components/product-actions"
 
 type ProductTemplateProps = {
   product: Product
@@ -27,6 +27,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   if (!product || !product.id) {
     return notFound()
   }
+
+  console.log("🕊️😂🕊️", product)
 
   return (
     <>
@@ -46,13 +48,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
           <ProductOnboardingCta />
           {/* <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
+            fallback={<ProductActions disabled={true} product={product} />}
           >
             <ProductActionsWrapper id={product.id} region={region} />
           </Suspense> */}
