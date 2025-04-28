@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 // import { getRegion, listRegions } from "@lib/data/regions"
 // import { getProductByHandle, getProductsList } from "@lib/data/products"
 import { Locale } from "@lib/data-tgn/locales"
-import { getProductsList, getProductById } from "@lib/data-tgn/products"
+import { getProductsList, getProductBySlug } from "@lib/data-tgn/products"
 import { IMAGE_BASE_URL } from "@lib/constants"
 import ProductTemplate from "modules-tgn/products/templates"
 
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   //     notFound()
   // }
 
-  const product = (await getProductById(handle)).product
+  const product = (await getProductBySlug(handle)).product
 
   if (!product) {
     notFound()
@@ -77,7 +77,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
-  const productData = await getProductById(params.handle)
+  const productData = await getProductBySlug(params.handle)
 
   if (!productData.product) {
     notFound()

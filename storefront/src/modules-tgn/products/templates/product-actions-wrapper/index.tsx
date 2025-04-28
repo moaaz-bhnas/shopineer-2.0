@@ -1,25 +1,19 @@
-import { getProductsById } from "@lib/data/products"
-import { HttpTypes } from "@medusajs/types"
-import ProductActions from "@modules/products/components/product-actions"
+import { getProductBySlug } from "@lib/data-tgn/products"
+import ProductActions from "modules-tgn/products/components/product-actions"
 
 /**
  * Fetches real time pricing for a product and renders the product actions component.
  */
 export default async function ProductActionsWrapper({
-  id,
-  region,
+  handle,
 }: {
-  id: string
-  region: HttpTypes.StoreRegion
+  handle: string
 }) {
-  const [product] = await getProductsById({
-    ids: [id],
-    regionId: region.id,
-  })
+  const product = await getProductBySlug(handle)
 
   if (!product) {
     return null
   }
 
-  return <ProductActions product={product} region={region} />
+  return <ProductActions product={product.product} />
 }

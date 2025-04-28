@@ -1,7 +1,4 @@
-import {
-  getProductsList,
-  getProductsListWithSort,
-} from "@lib/data-tgn/products"
+import { getProductsList } from "@lib/data-tgn/products"
 import { getRegion } from "@lib/data/regions"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -34,6 +31,7 @@ export default async function PaginatedProducts({
 }) {
   const queryParams: any = {
     limit: 12,
+    page,
   }
 
   // if (collectionId) {
@@ -47,9 +45,8 @@ export default async function PaginatedProducts({
   // if (productsIds) {
   //   queryParams["id"] = productsIds
   // }
-
-  if (sortBy === "created_at") {
-    queryParams["order"] = "created_at"
+  if (sortBy) {
+    queryParams["sortBy"] = sortBy
   }
 
   // const region = await getRegion(countryCode)
@@ -69,15 +66,13 @@ export default async function PaginatedProducts({
 
   const {
     response: { products, count },
-  } = await getProductsListWithSort({
+  } = await getProductsList({
+    ...queryParams,
     page,
-    queryParams,
     sortBy,
   })
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
-
-  console.log("🕊️🕊️🕊️", products[0])
 
   return (
     <>

@@ -36,7 +36,7 @@ export default async function ProductPreview({
     >
       <div data-testid="product-wrapper">
         <Thumbnail
-          thumbnail={`${IMAGE_BASE_URL}/${product.thumbnail.path}`}
+          thumbnail={`${IMAGE_BASE_URL}/${product.thumbnail?.path}`}
           images={product.images}
           size="full"
           isFeatured={isFeatured}

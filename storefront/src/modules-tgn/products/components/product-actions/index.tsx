@@ -11,24 +11,23 @@ import OptionSelect from "@modules/products/components/product-actions/option-se
 
 import MobileActions from "./mobile-actions"
 import ProductPrice from "../product-price"
-import { addToCart } from "@lib/data/cart"
-import { HttpTypes } from "@medusajs/types"
+import { Product, AttributeValue } from "@lib/types"
+import { addToCart } from "@lib/data-tgn/cart"
 
 type ProductActionsProps = {
-  product: HttpTypes.StoreProduct
-  region: HttpTypes.StoreRegion
+  product: Product
   disabled?: boolean
 }
 
-const optionsAsKeymap = (variantOptions: any) => {
+const optionsAsKeymap = (variantOptions: AttributeValue[]) => {
   return variantOptions?.reduce(
-    (acc: Record<string, string | undefined>, varopt: any) => {
+    (acc: Record<string, string | undefined>, varopt: AttributeValue) => {
       if (
-        varopt.option &&
+        varopt.attribute.name &&
         varopt.value !== null &&
         varopt.value !== undefined
       ) {
-        acc[varopt.option.title] = varopt.value
+        acc[varopt.attribute.name] = varopt.value
       }
       return acc
     },
@@ -38,7 +37,6 @@ const optionsAsKeymap = (variantOptions: any) => {
 
 export default function ProductActions({
   product,
-  region,
   disabled,
 }: ProductActionsProps) {
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
@@ -48,7 +46,9 @@ export default function ProductActions({
   // If there is only 1 variant, preselect the options
   useEffect(() => {
     if (product.variants?.length === 1) {
-      const variantOptions = optionsAsKeymap(product.variants[0].options)
+      const variantOptions = optionsAsKeymap(
+        product.variants[0].attribute_values
+      )
       setOptions(variantOptions ?? {})
     }
   }, [product.variants])
@@ -59,7 +59,7 @@ export default function ProductActions({
     }
 
     return product.variants.find((v) => {
-      const variantOptions = optionsAsKeymap(v.options)
+      const variantOptions = optionsAsKeymap(v.attribute_values)
       return isEqual(variantOptions, options)
     })
   }, [product.variants, options])
@@ -74,20 +74,22 @@ export default function ProductActions({
 
   // check if the selected variant is in stock
   const inStock = useMemo(() => {
-    // If we don't manage inventory, we can always add to cart
-    if (selectedVariant && !selectedVariant.manage_inventory) {
-      return true
-    }
+    // // If we don't manage inventory, we can always add to cart
+    // if (selectedVariant && !selectedVariant.manage_inventory) {
+    //   return true
+    // }
 
-    // If we allow back orders on the variant, we can add to cart
-    if (selectedVariant?.allow_backorder) {
-      return true
-    }
+    // // If we allow back orders on the variant, we can add to cart
+    // if (selectedVariant?.allow_backorder) {
+    //   return true
+    // }
 
     // If there is inventory available, we can add to cart
     if (
-      selectedVariant?.manage_inventory &&
-      (selectedVariant?.inventory_quantity || 0) > 0
+      // selectedVariant?.manage_inventory &&
+      // (selectedVariant?.inventory_quantity || 0) > 0
+      selectedVariant &&
+      selectedVariant.stock > 0
     ) {
       return true
     }
@@ -106,11 +108,7 @@ export default function ProductActions({
 
     setIsAdding(true)
 
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
+    await addToCart(product.id, selectedVariant.id, 1)
 
     setIsAdding(false)
   }
@@ -121,7 +119,7 @@ export default function ProductActions({
         <div>
           {(product.variants?.length ?? 0) > 1 && (
             <div className="flex flex-col gap-y-4">
-              {(product.options || []).map((option) => {
+              {(product.product_attributes || []).map((option) => {
                 return (
                   <div key={option.id}>
                     <OptionSelect
