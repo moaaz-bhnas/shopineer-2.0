@@ -6,8 +6,9 @@ import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 import { getProductsById } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
-import { Product } from "@lib/data-tgn/products"
 import { IMAGE_BASE_URL } from "@lib/constants"
+import { Product } from "@lib/types"
+import { getCheapestVariant } from "@lib/util/get-cheapest-price"
 
 export default async function ProductPreview({
   product,
@@ -29,6 +30,12 @@ export default async function ProductPreview({
   //   product: pricedProduct,
   // })
 
+  const cheapestPrice = getCheapestVariant(product)
+
+  // Always null as product is fetched without variants
+
+  console.log("🫣", cheapestPrice)
+
   return (
     <LocalizedClientLink
       href={`/products-tgn/${product.slug}`}
@@ -46,8 +53,7 @@ export default async function ProductPreview({
             {product.title}
           </Text>
           <div className="flex items-center gap-x-2">
-            <PreviewPrice product={product} />
-            {/* {cheapestPrice && <PreviewPrice price={cheapestPrice} />} */}
+            {cheapestPrice && <PreviewPrice price={cheapestPrice.price} />}
           </div>
         </div>
       </div>
